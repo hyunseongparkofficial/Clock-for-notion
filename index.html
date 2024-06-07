@@ -1,98 +1,148 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flip Clock</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #000;
-            margin: 0;
-            font-family: 'Arial', sans-serif;
-        }
-        .flip-clock {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: #000;
-            padding: 20px;
-            border-radius: 10px;
-        }
-        .time {
-            display: flex;
-        }
-        .flip-clock .digit {
-            position: relative;
-            width: 80px;
-            height: 120px;
-            background: #333;
-            color: #fff;
-            font-size: 72px;
-            font-weight: bold;
-            line-height: 120px;
-            text-align: center;
-            border-radius: 10px;
-            margin: 0 5px;
-        }
-        .flip-clock .ampm {
-            margin-top: 10px;
-            font-size: 24px;
-            color: #fff;
-        }
-        .flip-clock .digit:before,
-        .flip-clock .digit:after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 50%;
-            background: #222;
-            z-index: -1;
-        }
-        .flip-clock .digit:before {
-            top: 0;
-            border-radius: 10px 10px 0 0;
-        }
-        .flip-clock .digit:after {
-            bottom: 0;
-            border-radius: 0 0 10px 10px;
-        }
-    </style>
+  <title>Flip Clock</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .clock {
+      display: flex;
+      font-size: 8em;
+    }
+
+    .clock .digit {
+      width: 100px;
+      height: 150px;
+      margin: 0 10px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .clock .digit .top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 50%;
+      background-color: #000;
+      transform-origin: bottom;
+      transform: rotateX(-90deg);
+    }
+
+    .clock .digit .bottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 50%;
+      background-color: #000;
+      transform-origin: top;
+      transform: rotateX(90deg);
+    }
+
+    .clock .digit .number {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 3em;
+      transform-origin: center;
+    }
+
+    .clock .digit.active .number {
+      transform: rotateX(180deg);
+    }
+
+    .clock .digit .number.hidden {
+      visibility: hidden;
+    }
+
+    .clock .digit .top,
+    .clock .digit .bottom {
+      transition: transform 0.5s ease;
+    }
+  </style>
 </head>
 <body>
-    <div class="flip-clock">
-        <div class="time">
-            <div class="digit" id="hours">00</div>
-            <div class="digit">:</div>
-            <div class="digit" id="minutes">00</div>
-        </div>
-        <div class="ampm" id="ampm">AM</div>
+  <div class="clock">
+    <div class="digit" id="digit-1">
+      <div class="top"></div>
+      <div class="bottom"></div>
+      <div class="number hidden">2</div>
+      <div class="number">3</div>
     </div>
+    <div class="digit" id="digit-2">
+      <div class="top"></div>
+      <div class="bottom"></div>
+      <div class="number hidden">3</div>
+      <div class="number">4</div>
+    </div>
+  </div>
 
-    <script>
-        function updateClock() {
-            const now = new Date();
-            const hoursElement = document.getElementById('hours');
-            const minutesElement = document.getElementById('minutes');
-            const ampmElement = document.getElementById('ampm');
+  <script>
+    const digits = document.querySelectorAll('.digit');
+    const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-            let hours = now.getHours();
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const ampm = hours >= 12 ? 'PM' : 'AM';
+    function updateClock() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
 
-            hours = hours % 12;
-            hours = hours ? hours : 12; // the hour '0' should be '12'
-            hours = String(hours).padStart(2, '0');
+      // Update the hours digits
+      const hourTens = Math.floor(hours / 10);
+      const hourUnits = hours % 10;
+      updateDigit(digits[0], hourTens);
+      updateDigit(digits[1], hourUnits);
+    }
 
-            hoursElement.textContent = hours;
-            minutesElement.textContent = minutes;
-            ampmElement.textContent = ampm;
-        }
+    function updateDigit(digit, number) {
+      // Find the current number on the digit
+      const currentNumber = parseInt(digit.querySelector('.number:not(.hidden)').textContent);
 
-        setInterval(updateClock, 1000);
-        updateClock(); // initial call to display the time immediately
-    </
+      // Find the index of the current number and the target number in the array
+      const currentIndex = numbers.indexOf(currentNumber);
+      const targetIndex = numbers.indexOf(number);
 
+      // If the numbers are different, flip the digit
+      if (currentIndex !== targetIndex) {
+        // Set the current number as hidden
+        digit.querySelector('.number:not(.hidden)').classList.add('hidden');
+
+        // Find the target number element
+        const targetNumber = digit.querySelector(`.number[data-number="${number}"]`);
+
+        // Show the target number and mark the digit as active
+        targetNumber.classList.remove('hidden');
+        digit.classList.add('active');
+
+        // After the flip animation, reset the digit
+        setTimeout(() => {
+          digit.classList.remove('active');
+          digit.querySelector('.number:not(.hidden)').classList.remove('hidden');
+          targetNumber.classList.add('hidden');
+        }, 500);
+      }
+    }
+
+    // Start the clock
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>
