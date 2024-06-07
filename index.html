@@ -27,122 +27,101 @@
       display: flex;
       justify-content: center;
       align-items: center;
-    }
-
-    .clock .digit .top {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 50%;
-      background-color: #000;
-      transform-origin: bottom;
-      transform: rotateX(-90deg);
-    }
-
-    .clock .digit .bottom {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 50%;
-      background-color: #000;
-      transform-origin: top;
-      transform: rotateX(90deg);
-    }
-
-    .clock .digit .number {
-      position: absolute;
-      top: 50%;
-      left: 0;
-      width: 100%;
-      height: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 3em;
-      transform-origin: center;
-    }
-
-    .clock .digit.active .number {
-      transform: rotateX(180deg);
-    }
-
-    .clock .digit .number.hidden {
-      visibility: hidden;
+      overflow: hidden;
     }
 
     .clock .digit .top,
     .clock .digit .bottom {
+      position: absolute;
+      width: 100%;
+      height: 50%;
+      background-color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .clock .digit .top {
+      top: 0;
+      transform-origin: bottom;
+    }
+
+    .clock .digit .bottom {
+      bottom: 0;
+      transform-origin: top;
+    }
+
+    .clock .digit .number {
+      font-size: 1em;
+    }
+
+    .clock .digit .flip {
       transition: transform 0.5s ease;
     }
   </style>
 </head>
 <body>
   <div class="clock">
-    <div class="digit" id="digit-1">
-      <div class="top"></div>
-      <div class="bottom"></div>
-      <div class="number hidden">2</div>
-      <div class="number">3</div>
+    <div class="digit" id="hours-tens">
+      <div class="top">0</div>
+      <div class="bottom">0</div>
     </div>
-    <div class="digit" id="digit-2">
-      <div class="top"></div>
-      <div class="bottom"></div>
-      <div class="number hidden">3</div>
-      <div class="number">4</div>
+    <div class="digit" id="hours-units">
+      <div class="top">0</div>
+      <div class="bottom">0</div>
+    </div>
+    <div class="digit">:</div>
+    <div class="digit" id="minutes-tens">
+      <div class="top">0</div>
+      <div class="bottom">0</div>
+    </div>
+    <div class="digit" id="minutes-units">
+      <div class="top">0</div>
+      <div class="bottom">0</div>
+    </div>
+    <div class="digit ampm">
+      <div class="top">AM</div>
+      <div class="bottom">AM</div>
     </div>
   </div>
 
   <script>
-    const digits = document.querySelectorAll('.digit');
-    const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-
     function updateClock() {
       const now = new Date();
       const hours = now.getHours();
       const minutes = now.getMinutes();
-      const seconds = now.getSeconds();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
 
-      // Update the hours digits
-      const hourTens = Math.floor(hours / 10);
-      const hourUnits = hours % 10;
-      updateDigit(digits[0], hourTens);
-      updateDigit(digits[1], hourUnits);
+      const hourTens = Math.floor((hours % 12 || 12) / 10);
+      const hourUnits = (hours % 12 || 12) % 10;
+      const minuteTens = Math.floor(minutes / 10);
+      const minuteUnits = minutes % 10;
+
+      updateDigit(document.getElementById('hours-tens'), hourTens);
+      updateDigit(document.getElementById('hours-units'), hourUnits);
+      updateDigit(document.getElementById('minutes-tens'), minuteTens);
+      updateDigit(document.getElementById('minutes-units'), minuteUnits);
+      updateDigit(document.querySelector('.ampm'), ampm);
     }
 
-    function updateDigit(digit, number) {
-      // Find the current number on the digit
-      const currentNumber = parseInt(digit.querySelector('.number:not(.hidden)').textContent);
+    function updateDigit(digitElement, newNumber) {
+      const top = digitElement.querySelector('.top');
+      const bottom = digitElement.querySelector('.bottom');
+      const currentNumber = top.textContent.trim();
 
-      // Find the index of the current number and the target number in the array
-      const currentIndex = numbers.indexOf(currentNumber);
-      const targetIndex = numbers.indexOf(number);
-
-      // If the numbers are different, flip the digit
-      if (currentIndex !== targetIndex) {
-        // Set the current number as hidden
-        digit.querySelector('.number:not(.hidden)').classList.add('hidden');
-
-        // Find the target number element
-        const targetNumber = digit.querySelector(`.number[data-number="${number}"]`);
-
-        // Show the target number and mark the digit as active
-        targetNumber.classList.remove('hidden');
-        digit.classList.add('active');
-
-        // After the flip animation, reset the digit
+      if (currentNumber !== String(newNumber)) {
+        bottom.textContent = newNumber;
+        digitElement.classList.add('flip');
         setTimeout(() => {
-          digit.classList.remove('active');
-          digit.querySelector('.number:not(.hidden)').classList.remove('hidden');
-          targetNumber.classList.add('hidden');
+          top.textContent = newNumber;
+          digitElement.classList.remove('flip');
         }, 500);
       }
     }
 
     // Start the clock
     updateClock();
-    setInterval(updateClock, 1000);
+    setInterval(updateClock, 60000); // Update every minute
   </script>
 </body>
 </html>
